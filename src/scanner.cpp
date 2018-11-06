@@ -262,7 +262,8 @@ void ParseAIT(ApplicationInformationSectionMultiVector &ait_vector, AITInfoVecto
 	bool save_ait = false;
 	bool already_exist = false;
 
-	std:string applicaionName = "", hbbtvUrl = "", boundaryExtension = "";
+	std::string applicaionName = "", hbbtvUrl = "", boundaryExtension = "";
+	std::string TPDescPath = "", SALDescPath = "";
 	int profileCode = 0, orgId = 0, appId = 0, controlCode = 0, profileVersion = 0;
 
 	ApplicationInformationSectionMultiVector::iterator ait_top_iter = ait_vector.begin();
@@ -301,6 +302,7 @@ void ParseAIT(ApplicationInformationSectionMultiVector &ait_vector, AITInfoVecto
 								);
 							}
 						}
+						DA_DEBUG("\tAPPLICATION_DESCRIPTOR: %d(0x%x), %d.%d.%d", profileCode, profileCode, profileVersion&0xff, (profileVersion>>8)&0xff, (profileVersion>>16)&0xff);
 						break;
 					case APPLICATION_NAME_DESCRIPTOR: {
 							ApplicationNameDescriptor *nameDescriptor  = (ApplicationNameDescriptor*)(*desc);
@@ -310,6 +312,7 @@ void ParseAIT(ApplicationInformationSectionMultiVector &ait_vector, AITInfoVecto
 								break;
 							}
 						}
+						DA_DEBUG("\tAPPLICATION_NAME_DESCRIPTOR: %s", applicaionName.c_str());
 						break;
 					case TRANSPORT_PROTOCOL_DESCRIPTOR: {
 							TransportProtocolDescriptor *transport = (TransportProtocolDescriptor*)(*desc);
@@ -322,19 +325,21 @@ void ParseAIT(ApplicationInformationSectionMultiVector &ait_vector, AITInfoVecto
 							case 3: { /* interaction */
 									InterActionTransportConstIterator interactionit = transport->getInteractionTransports()->begin();
 									for(; interactionit != transport->getInteractionTransports()->end(); ++interactionit) {
-										hbbtvUrl = (*interactionit)->getUrlBase()->getUrl();
+										TPDescPath = (*interactionit)->getUrlBase()->getUrl();
 										break;
 									}
 									break;
 								}
 							}
 						}
+						DA_DEBUG("\tTRANSPORT_PROTOCOL_DESCRIPTOR: %s", TPDescPath.c_str());
 						break;
 					case GRAPHICS_CONSTRAINTS_DESCRIPTOR:
 						break;
 					case SIMPLE_APPLICATION_LOCATION_DESCRIPTOR: {
 							SimpleApplicationLocationDescriptor *applicationlocation = (SimpleApplicationLocationDescriptor*)(*desc);
-							hbbtvUrl += applicationlocation->getInitialPath();
+							SALDescPath = applicationlocation->getInitialPath();
+							DA_DEBUG("\tSIMPLE_APPLICATION_LOCATION_DESCRIPTOR: %s", (applicationlocation->getInitialPath()).c_str());
 						}
 						break;
 					case APPLICATION_USAGE_DESCRIPTOR:
@@ -353,6 +358,7 @@ void ParseAIT(ApplicationInformationSectionMultiVector &ait_vector, AITInfoVecto
 						break;
 					}
 				}
+				hbbtvUrl = TPDescPath + SALDescPath;
 			}
 
 			DA_DEBUG("\n"\
